@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-sync-backend
+  labels:
+    app: video-sync-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-sync-backend
+  template:
+    metadata:
+      labels:
+        app: video-sync-backend
+    spec:
+      containers:
+      - name: video-sync-backend
+        image: video-sync-backend
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-sync-backend
+spec:
+  selector:
+    app: video-sync-backend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

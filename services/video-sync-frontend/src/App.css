@@ -1,27 +1,97 @@
-/* src/App.css */
 .App {
   text-align: center;
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  padding: 20px;
+  color: white;
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.connection-status {
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+.status-connected { color: #4CAF50; }
+.status-disconnected { color: #F44336; }
+
+.App-main {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 20px;
 }
 
-button {
-  font-size: 1.5rem;
-  padding: 0.5rem 1rem;
-  margin: 1rem;
-  cursor: pointer;
+.clock-container {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-bottom: 20px;
 }
 
-p {
+.clock {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  width: 45%;
+}
+
+.clock h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.clock p {
   font-size: 1.5rem;
-  color: #61dafb;
+  font-weight: bold;
+  color: #4a4a4a;
+}
+
+.sync-stats {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.sync-stats h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.stat-item {
+  text-align: left;
+}
+
+.stat-label {
+  font-weight: bold;
+  color: #666;
+}
+
+.stat-value {
+  display: block;
+  color: #4a4a4a;
+  font-size: 1.1rem;
 }

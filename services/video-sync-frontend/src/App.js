@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
+import ServerClock from "./components/serverClock";
+import ClientClock from "./components/clientClock";
+import SyncStats from "./components/syncStats";
 import "./App.css";
 
 function App() {
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
+  const [syncResult, setSyncResult] = useState(null);
+  const [serverTime, setServerTime] = useState(null);
   const [worker, setWorker] = useState(null);
-  const [timeSyncResult, setTimeSyncResult] = useState(null);
 
   useEffect(() => {
     if (typeof Worker !== "undefined") {
@@ -15,13 +19,17 @@ function App() {
         if (e.data.type === "connectionStatus") {
           setConnectionStatus(e.data.status);
         } else if (e.data.type === "timeSyncResult") {
-          setTimeSyncResult(e.data);
-        } else if (e.data.type === "error") {
-          console.error(e.data.message);
+          setSyncResult(e.data);
+        } else if (e.data.type === "serverTimeUpdate") {
+          setServerTime({
+            ...e.data.time,
+            clientReceivedTime: performance.now(),
+          });
         }
       };
 
       return () => {
+        newWorker.postMessage({ type: "disconnect" });
         newWorker.terminate();
       };
     } else {
@@ -29,58 +37,24 @@ function App() {
     }
   }, []);
 
-  const handleConnect = () => {
-    if (worker) {
-      worker.postMessage({ type: "connect" });
-    }
-  };
-
-  const handleDisconnect = () => {
-    if (worker) {
-      worker.postMessage({ type: "disconnect" });
-    }
-  };
-
-  const handleSendTimeSync = () => {
-    if (worker) {
-      worker.postMessage({ type: "sendTimeSync" });
-    }
-  };
-
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Time Synchronization Demo</h1>
-        <p>Connection Status: {connectionStatus}</p>
-        <button
-          onClick={handleConnect}
-          disabled={connectionStatus === "Connected"}
-          type="button"
-        >
-          Connect
-        </button>
-        <button
-          onClick={handleDisconnect}
-          disabled={connectionStatus === "Disconnected"}
-          type="button"
-        >
-          Disconnect
-        </button>
-        <button onClick={handleSendTimeSync} type="button">
-          Send Time Sync
-        </button>
-        {timeSyncResult && (
-          <div>
-            <h2>Time Sync Results:</h2>
-            <p>t1 (Client Send): {timeSyncResult.t1.toFixed(3)} ms</p>
-            <p>t2 (Server Receive): {timeSyncResult.t2.toFixed(3)} ms</p>
-            <p>t3 (Server Send): {timeSyncResult.t3.toFixed(3)} ms</p>
-            <p>t4 (Client Receive): {timeSyncResult.t4.toFixed(3)} ms</p>
-            <p>Round-trip Delay: {timeSyncResult.delay.toFixed(3)} ms</p>
-            <p>Clock Offset: {timeSyncResult.offset.toFixed(3)} ms</p>
-          </div>
-        )}
+        <h1>Time Synchronization Dashboard</h1>
+        <div className="connection-status">
+          Status:{" "}
+          <span className={`status-${connectionStatus.toLowerCase()}`}>
+            {connectionStatus}
+          </span>
+        </div>
       </header>
+      <main className="App-main">
+        <div className="clock-container">
+          <ServerClock serverTime={serverTime} />
+          <ClientClock />
+        </div>
+        <SyncStats syncResult={syncResult} />
+      </main>
     </div>
   );
 }

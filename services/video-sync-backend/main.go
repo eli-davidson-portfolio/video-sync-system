@@ -1,68 +1,47 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 
-	"github.com/go-kit/kit/log"
+	"github.com/gorilla/websocket"
 )
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true // Allow all origins
+	},
+}
+
 func main() {
-	logger := log.NewLogfmtLogger(os.Stderr)
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
-
-	var svc VideoSyncService
-	svc = videoSyncService{}
-	svc = loggingMiddleware{logger, svc}
-
-	httpHandler := makeHTTPHandler(svc, logger)
-
-	errs := make(chan error)
-	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
-
-	go func() {
-		logger.Log("transport", "HTTP", "addr", ":8080")
-		errs <- http.ListenAndServe(":8080", httpHandler)
-	}()
-
-	logger.Log("exit", <-errs)
+	http.HandleFunc("/ws", handleWebSocket)
+	
+	log.Println("Server starting on :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-type VideoSyncService interface {
-	Sync(clientTime int64) (int64, error)
-}
+func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("WebSocket upgrade failed:", err)
+		return
+	}
+	defer conn.Close()
 
-type videoSyncService struct{}
+	log.Println("New WebSocket connection established")
 
-func (videoSyncService) Sync(clientTime int64) (int64, error) {
-	// TODO: Implement synchronization logic
-	return clientTime, nil
-}
+	for {
+		messageType, p, err := conn.ReadMessage()
+		if err != nil {
+			log.Println("WebSocket read error:", err)
+			return
+		}
+		log.Printf("Received message: %s", p)
 
-type loggingMiddleware struct {
-	logger log.Logger
-	next   VideoSyncService
-}
-
-func (mw loggingMiddleware) Sync(clientTime int64) (serverTime int64, err error) {
-	defer func() {
-		mw.logger.Log("method", "Sync", "clientTime", clientTime, "serverTime", serverTime, "err", err)
-	}()
-	return mw.next.Sync(clientTime)
-}
-
-func makeHTTPHandler(svc VideoSyncService, logger log.Logger) http.Handler {
-	// TODO: Implement HTTP handler
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hello, World!"))
-	})
+		// Echo the message back
+		if err := conn.WriteMessage(messageType, p); err != nil {
+			log.Println("WebSocket write error:", err)
+			return
+		}
+	}
 }

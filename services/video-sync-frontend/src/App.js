@@ -1,9 +1,8 @@
-// src/App.js
 import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
-  const [workerResult, setWorkerResult] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState("Disconnected");
   const [worker, setWorker] = useState(null);
 
   useEffect(() => {
@@ -12,7 +11,9 @@ function App() {
       setWorker(newWorker);
 
       newWorker.onmessage = function (e) {
-        setWorkerResult(e.data);
+        if (e.data.type === "connectionStatus") {
+          setConnectionStatus(e.data.status);
+        }
       };
 
       return () => {
@@ -23,23 +24,37 @@ function App() {
     }
   }, []);
 
-  const handleClick = () => {
+  const handleConnect = () => {
     if (worker) {
-      const number = 5; // Example number to calculate factorial
-      worker.postMessage(number);
-      return true; // Ensure a return value for the function
+      worker.postMessage({ type: "connect" });
     }
-    return false; // Ensure a return value for the function
+  };
+
+  const handleDisconnect = () => {
+    if (worker) {
+      worker.postMessage({ type: "disconnect" });
+    }
   };
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Web Worker Demo</h1>
-        <button onClick={handleClick} type="button">
-          Calculate Factorial
+        <h1>WebSocket Connection Demo</h1>
+        <p>Connection Status: {connectionStatus}</p>
+        <button
+          onClick={handleConnect}
+          disabled={connectionStatus === "Connected"}
+          type="button"
+        >
+          Connect
         </button>
-        {workerResult !== null && <p>Result: {workerResult}</p>}
+        <button
+          onClick={handleDisconnect}
+          disabled={connectionStatus === "Disconnected"}
+          type="button"
+        >
+          Disconnect
+        </button>
       </header>
     </div>
   );

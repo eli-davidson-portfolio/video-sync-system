@@ -27,14 +27,18 @@ function App() {
     if (worker) {
       const number = 5; // Example number to calculate factorial
       worker.postMessage(number);
+      return true; // Ensure a return value for the function
     }
+    return false; // Ensure a return value for the function
   };
 
   return (
     <div className="App">
       <header className="App-header">
         <h1>Web Worker Demo</h1>
-        <button onClick={handleClick}>Calculate Factorial</button>
+        <button onClick={handleClick} type="button">
+          Calculate Factorial
+        </button>
         {workerResult !== null && <p>Result: {workerResult}</p>}
       </header>
     </div>

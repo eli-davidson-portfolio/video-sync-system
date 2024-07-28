@@ -14,21 +14,18 @@ k8s_yaml('kubernetes/backend.yaml')
 # Resource configuration for backend
 k8s_resource('video-sync-backend', port_forwards='8080:8080')
 
-# Frontend (commented out for now)
-# docker_build('video-sync-frontend', './services/video-sync-frontend',
-#     live_update=[
-#         sync('./services/video-sync-frontend/src', '/app/src'),
-#         run('npm install', trigger='./services/video-sync-frontend/package.json'),
-#         run('npm run build', trigger=['./services/video-sync-frontend/src']),
-#     ])
+# Frontend
+docker_build('video-sync-frontend', './services/video-sync-frontend',
+    dockerfile='./services/video-sync-frontend/Dockerfile',
+    live_update=[
+        sync('./services/video-sync-frontend/src', '/app/src'),
+        run('npm install', trigger='./services/video-sync-frontend/package.json'),
+        run('npm run build', trigger=['./services/video-sync-frontend/src']),
+    ])
 
-# Frontend Kubernetes deployment (commented out for now)
-# k8s_yaml('kubernetes/frontend.yaml')
-# k8s_resource('video-sync-frontend', port_forwards='3000:3000')
-
-# Redis (commented out for now)
-# k8s_yaml('kubernetes/redis.yaml')
+# Frontend Kubernetes deployment
+k8s_yaml('kubernetes/frontend.yaml')
+k8s_resource('video-sync-frontend', port_forwards='3000:80')
 
 # Resource dependencies
-# k8s_resource('video-sync-backend', resource_deps=['redis'])
-# k8s_resource('video-sync-frontend', resource_deps=['video-sync-backend'])
+k8s_resource('video-sync-frontend', resource_deps=['video-sync-backend'])

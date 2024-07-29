@@ -1,14 +1,14 @@
-import React from "react";
+import React from 'react';
 
 const SyncStats = ({ syncResult }) => {
   if (!syncResult) return null;
 
   const formatDriftRate = (rate) => {
     if (Math.abs(rate) < 0.000001) {
-      return "0 ms/s (no significant drift)";
+      return '0 ms/s (no significant drift)';
     }
     return `${rate.toFixed(6)} ms/s (${
-      rate > 0 ? "gaining" : "losing"
+      rate > 0 ? 'gaining' : 'losing'
     } 1 second every ${(1000 / Math.abs(rate) / 3600).toFixed(1)} hours)`;
   };
 

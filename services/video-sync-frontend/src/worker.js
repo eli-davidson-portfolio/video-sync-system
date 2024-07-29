@@ -27,10 +27,10 @@ function connect() {
       return;
     }
 
-    socket = new WebSocket("ws://localhost:8080/ws");
+    socket = new WebSocket('ws://localhost:8080/ws');
 
     socket.onopen = function () {
-      postMessage({ type: "connectionStatus", status: "Connected" });
+      postMessage({ type: 'connectionStatus', status: 'Connected' });
       startSyncProcess();
       startServerTimeUpdates();
       resolve();
@@ -38,33 +38,33 @@ function connect() {
 
     socket.onmessage = function (event) {
       const data = JSON.parse(event.data);
-      if (data.type === "timeSync") {
+      if (data.type === 'timeSync') {
         handleTimeSync(data);
       } else {
-        postMessage({ type: "message", data: event.data });
+        postMessage({ type: 'message', data: event.data });
       }
     };
 
     socket.onclose = function (event) {
       if (event.wasClean) {
         postMessage({
-          type: "connectionStatus",
-          status: "Disconnected cleanly",
+          type: 'connectionStatus',
+          status: 'Disconnected cleanly',
         });
       } else {
-        postMessage({ type: "connectionStatus", status: "Connection died" });
+        postMessage({ type: 'connectionStatus', status: 'Connection died' });
       }
       socket = null;
       stopSyncProcess();
       stopServerTimeUpdates();
       setTimeout(connect, 5000); // Attempt to reconnect after 5 seconds
-      reject(new Error("WebSocket closed"));
+      reject(new Error('WebSocket closed'));
     };
 
     socket.onerror = function (error) {
       postMessage({
-        type: "connectionStatus",
-        status: "Error: " + error.message,
+        type: 'connectionStatus',
+        status: 'Error: ' + error.message,
       });
       reject(error);
     };
@@ -77,9 +77,9 @@ function disconnect() {
     socket = null;
     stopSyncProcess();
     stopServerTimeUpdates();
-    postMessage({ type: "connectionStatus", status: "Disconnected" });
+    postMessage({ type: 'connectionStatus', status: 'Disconnected' });
   } else {
-    postMessage({ type: "connectionStatus", status: "Not connected" });
+    postMessage({ type: 'connectionStatus', status: 'Not connected' });
   }
 }
 
@@ -98,17 +98,17 @@ function stopSyncProcess() {
 function sendTimeSync() {
   if (socket && socket.readyState === WebSocket.OPEN) {
     const t1 = getHighResTime();
-    socket.send(JSON.stringify({ type: "timeSync", t1: t1 }));
+    socket.send(JSON.stringify({ type: 'timeSync', t1: t1 }));
   } else {
     connect()
       .then(() => {
         const t1 = getHighResTime();
-        socket.send(JSON.stringify({ type: "timeSync", t1: t1 }));
+        socket.send(JSON.stringify({ type: 'timeSync', t1: t1 }));
       })
       .catch((error) => {
         postMessage({
-          type: "error",
-          message: "Failed to connect: " + error.message,
+          type: 'error',
+          message: 'Failed to connect: ' + error.message,
         });
       });
   }
@@ -137,7 +137,7 @@ function getServerTime() {
   const currentTime = getHighResTime();
 
   if (lastEstimatedServerTime === null || lastEstimationTime === null) {
-    console.log("Invalid server time: No initial estimation available", {
+    console.log('Invalid server time: No initial estimation available', {
       lastEstimatedServerTime,
       lastEstimationTime,
     });
@@ -147,14 +147,14 @@ function getServerTime() {
   const timeSinceLastEstimation = currentTime - lastEstimationTime;
 
   // Log sync results for debugging
-  console.log("Sync results:", syncResults);
+  console.log('Sync results:', syncResults);
 
   const drift = calculateDrift(
     syncResults.map((r) => r.offset),
-    syncResults.map((r) => r.t1)
+    syncResults.map((r) => r.t1),
   );
 
-  console.log("Drift calculation:", {
+  console.log('Drift calculation:', {
     drift,
     offsetsLength: syncResults.length,
     firstOffset: syncResults[0]?.offset,
@@ -164,7 +164,7 @@ function getServerTime() {
   const estimatedServerTime =
     lastEstimatedServerTime + timeSinceLastEstimation * (1 + drift);
 
-  console.log("Server time calculation:", {
+  console.log('Server time calculation:', {
     lastEstimatedServerTime,
     timeSinceLastEstimation,
     drift,
@@ -172,7 +172,7 @@ function getServerTime() {
   });
 
   if (isNaN(estimatedServerTime) || !isFinite(estimatedServerTime)) {
-    console.log("Invalid server time calculated:", {
+    console.log('Invalid server time calculated:', {
       lastEstimatedServerTime,
       lastEstimationTime,
       currentTime,
@@ -210,7 +210,7 @@ function handleTimeSync(data) {
   lastEstimatedServerTime = t3 + offset;
   lastEstimationTime = t4;
 
-  console.log("Time sync update:", {
+  console.log('Time sync update:', {
     t1,
     t2,
     t3,
@@ -222,7 +222,7 @@ function handleTimeSync(data) {
   });
 
   if (isNaN(lastEstimatedServerTime) || !isFinite(lastEstimatedServerTime)) {
-    console.log("Invalid lastEstimatedServerTime calculated:", {
+    console.log('Invalid lastEstimatedServerTime calculated:', {
       t3,
       offset,
       lastEstimatedServerTime,
@@ -230,7 +230,7 @@ function handleTimeSync(data) {
   }
 
   postMessage({
-    type: "timeSyncResult",
+    type: 'timeSyncResult',
     ...result,
     ...stats,
   });
@@ -247,7 +247,7 @@ function updateSyncInterval(stats) {
   } else {
     currentSyncInterval = Math.min(
       currentSyncInterval * 1.5,
-      MAX_SYNC_INTERVAL
+      MAX_SYNC_INTERVAL,
     );
   }
 
@@ -264,9 +264,9 @@ function startServerTimeUpdates() {
   serverTimeUpdateInterval = setInterval(() => {
     const serverTime = getServerTime();
     if (serverTime) {
-      postMessage({ type: "serverTimeUpdate", time: serverTime });
+      postMessage({ type: 'serverTimeUpdate', time: serverTime });
     } else {
-      console.log("Unable to get valid server time for update");
+      console.log('Unable to get valid server time for update');
     }
   }, 50); // Update every 50ms
 }
@@ -292,7 +292,7 @@ function confidenceInterval(samples) {
   const n = samples.length;
   const mean = samples.reduce((a, b) => a + b) / n;
   const stdDev = Math.sqrt(
-    samples.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n
+    samples.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n,
   );
   const error = (stdDev / Math.sqrt(n)) * 1.96; // 1.96 is the z-score for 95% confidence
   return [mean - error, mean + error];
@@ -310,13 +310,13 @@ function calculateDrift(offsets, timestamps) {
   const n = offsets.length;
 
   if (n < 2) {
-    console.log("Not enough data to calculate drift", { n });
+    console.log('Not enough data to calculate drift', { n });
     return 0;
   }
 
   const sumXY = offsets.reduce(
     (sum, offset, i) => sum + offset * timestamps[i],
-    0
+    0,
   );
   const sumX = timestamps.reduce((sum, t) => sum + t, 0);
   const sumY = offsets.reduce((sum, offset) => sum + offset, 0);
@@ -324,7 +324,7 @@ function calculateDrift(offsets, timestamps) {
 
   const drift = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
 
-  console.log("Drift calculation details:", {
+  console.log('Drift calculation details:', {
     n,
     sumXY,
     sumX,
@@ -334,7 +334,7 @@ function calculateDrift(offsets, timestamps) {
   });
 
   if (isNaN(drift) || !isFinite(drift)) {
-    console.log("Invalid drift calculated", { drift });
+    console.log('Invalid drift calculated', { drift });
     return 0;
   }
 
@@ -362,24 +362,24 @@ function detectOutliers(samples) {
   return samples.filter((x) => x < lowerBound || x > upperBound);
 }
 self.onmessage = function (event) {
-  if (event.data.type === "connect") {
+  if (event.data.type === 'connect') {
     connect();
-  } else if (event.data.type === "disconnect") {
+  } else if (event.data.type === 'disconnect') {
     disconnect();
-  } else if (event.data.type === "getHighResTime") {
-    postMessage({ type: "highResTime", time: getHighResTime() });
-  } else if (event.data.type === "sendTimeSync") {
+  } else if (event.data.type === 'getHighResTime') {
+    postMessage({ type: 'highResTime', time: getHighResTime() });
+  } else if (event.data.type === 'sendTimeSync') {
     sendTimeSync();
-  } else if (event.data.type === "getServerTime") {
-    postMessage({ type: "serverTime", time: getServerTime() });
-  } else if (event.data.type === "getHighResServerTime") {
+  } else if (event.data.type === 'getServerTime') {
+    postMessage({ type: 'serverTime', time: getServerTime() });
+  } else if (event.data.type === 'getHighResServerTime') {
     const serverTime = getServerTime();
     if (serverTime) {
-      postMessage({ type: "highResServerTime", time: serverTime.highResTime });
+      postMessage({ type: 'highResServerTime', time: serverTime.highResTime });
     } else {
       postMessage({
-        type: "error",
-        message: "Server time not yet synchronized",
+        type: 'error',
+        message: 'Server time not yet synchronized',
       });
     }
   }

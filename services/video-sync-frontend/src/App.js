@@ -1,40 +1,48 @@
-import React, { useState, useEffect } from "react";
-import ServerClock from "./components/serverClock";
-import ClientClock from "./components/clientClock";
-import SyncStats from "./components/syncStats";
-import "./App.css";
+import React, { useState, useEffect } from 'react';
+import ServerClock from './components/serverClock';
+import ClientClock from './components/clientClock';
+import SyncStats from './components/syncStats';
+import './App.css';
+import { createWorker, sendToWorker } from './workerManager';
 
 function App() {
-  const [connectionStatus, setConnectionStatus] = useState("Disconnected");
+  const [connectionStatus, setConnectionStatus] = useState('Disconnected');
   const [syncResult, setSyncResult] = useState(null);
   const [serverTime, setServerTime] = useState(null);
-  const [worker, setWorker] = useState(null);
 
   useEffect(() => {
-    if (typeof Worker !== "undefined") {
-      const newWorker = new Worker(new URL("./worker.js", import.meta.url));
-      setWorker(newWorker);
+    const timeSyncWorker = createWorker('timeSync', {
+      url: 'ws://localhost:8080',
+    });
 
-      newWorker.onmessage = function (e) {
-        if (e.data.type === "connectionStatus") {
-          setConnectionStatus(e.data.status);
-        } else if (e.data.type === "timeSyncResult") {
-          setSyncResult(e.data);
-        } else if (e.data.type === "serverTimeUpdate") {
+    timeSyncWorker.onmessage = function (e) {
+      const { type, data } = e.data;
+      switch (type) {
+        case 'connectionStatus':
+          setConnectionStatus(data.status);
+          break;
+        case 'timeSyncResult':
+          setSyncResult(data);
+          break;
+        case 'serverTimeUpdate':
           setServerTime({
-            ...e.data.time,
+            ...data.time,
             clientReceivedTime: performance.now(),
           });
-        }
-      };
+          break;
+        default:
+          console.log('Unhandled message type:', type);
+      }
+    };
 
-      return () => {
-        newWorker.postMessage({ type: "disconnect" });
-        newWorker.terminate();
-      };
-    } else {
-      console.log("Your browser does not support web workers.");
-    }
+    sendToWorker('timeSync', { type: 'startSync' });
+
+    return () => {
+      sendToWorker('timeSync', { type: 'disconnect' });
+      // Assuming workerManager has a method to terminate workers
+      // If not, you'll need to implement it
+      // terminateWorker("timeSync");
+    };
   }, []);
 
   return (
@@ -42,7 +50,7 @@ function App() {
       <header className="App-header">
         <h1>Time Synchronization Dashboard</h1>
         <div className="connection-status">
-          Status:{" "}
+          Status:{' '}
           <span className={`status-${connectionStatus.toLowerCase()}`}>
             {connectionStatus}
           </span>

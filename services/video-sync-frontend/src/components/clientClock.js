@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 
 const ClientClock = () => {
   const [time, setTime] = useState(new Date());
-  const [timezone, setTimezone] = useState("");
+  const [timezone, setTimezone] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,12 +20,12 @@ const ClientClock = () => {
     <div className="clock client-clock">
       <h2>Client Time (Local: {timezone})</h2>
       <p>
-        {time.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
+        {time.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
           hour12: true,
-          timeZoneName: "short",
+          timeZoneName: 'short',
         })}
       </p>
     </div>

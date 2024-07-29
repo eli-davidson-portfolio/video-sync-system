@@ -1,16 +1,16 @@
-// src/index.js
+import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 import React from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
+import ReactDOM from "react-dom";
 import App from "./App";
-import reportWebVitals from "./reportWebVitals";
 
-const container = document.getElementById("root");
-const root = createRoot(container);
-root.render(
-  <React.StrictMode>
+const client = new ApolloClient({
+  uri: "YOUR_GRAPHQL_SERVER_URL",
+  cache: new InMemoryCache(),
+});
+
+ReactDOM.render(
+  <ApolloProvider client={client}>
     <App />
-  </React.StrictMode>
+  </ApolloProvider>,
+  document.getElementById("root")
 );
-
-reportWebVitals();

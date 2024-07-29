@@ -3,36 +3,23 @@ FROM node:21-alpine AS build
 
 WORKDIR /app
 
-# Debugging: Print Node.js and npm versions
-RUN node --version && npm --version
-
+# Copy package.json and package-lock.json (if available)
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps
 
+# Install dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy the rest of the application code
 COPY . .
 
-# Debugging: List contents of /app
-RUN ls -la
-
-RUN npm install react-app-rewired customize-cra eslint eslint-plugin-react eslint-plugin-jsx-a11y eslint-plugin-import eslint-plugin-react-hooks @typescript-eslint/eslint-plugin @typescript-eslint/parser typescript @babel/plugin-transform-private-property-in-object @babel/plugin-proposal-private-property-in-object --save-dev --legacy-peer-deps
-
-# Debugging: List installed packages
-RUN npm list
-
-RUN npm run lint
+# Build the application
 RUN npm run build
-
-# Debugging: List contents of /app/build
-RUN ls -la build
 
 # Serve stage
 FROM nginx:stable-alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Debugging: List contents of /usr/share/nginx/html
-RUN ls -la /usr/share/nginx/html
 
 EXPOSE 80
 

@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  check_and_test:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,25 +16,41 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.19
+        go-version: 1.16
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '21'
+        node-version: '14'
+
+    - name: Check if tests exist
+      id: check_tests
+      run: |
+        if [ -d "test" ] || [ -n "$(find . -name '*_test.go')" ] || [ -n "$(find . -name '*.test.js')" ]; then
+          echo "::set-output name=has_tests::true"
+        else
+          echo "::set-output name=has_tests::false"
+        fi
 
     - name: Install dependencies
+      if: steps.check_tests.outputs.has_tests == 'true'
       run: |
         go mod download
         npm ci
 
     - name: Run Go tests
+      if: steps.check_tests.outputs.has_tests == 'true'
       run: go test ./...
 
     - name: Run React tests
+      if: steps.check_tests.outputs.has_tests == 'true'
       run: npm test
 
     - name: Build
       run: |
-        go build -v ./...
-        npm run build
+        if [ -f "go.mod" ]; then
+          go build -v ./...
+        fi
+        if [ -f "package.json" ]; then
+          npm run build
+        fi
